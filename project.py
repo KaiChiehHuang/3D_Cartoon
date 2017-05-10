@@ -18,8 +18,10 @@ for a given point
 @ originImg: the gray scale original image 
 return: the feature vector of this point
 """
-def caclPointNormFeature(point, originImg, windowSize = 5):
-    #TODO: check for corner 
+def caclPointNormFeature(point, originImg, windowSize = 20):
+    """
+    !!! TODO: check for corner 
+    """
     surroundPoints = np.array([originImg[point[0],point[1]]])
     for i in range(-windowSize,windowSize+1):
         for j in range(-windowSize,windowSize+1):
@@ -32,11 +34,12 @@ def caclPointNormFeature(point, originImg, windowSize = 5):
     return (surroundPoints - f_bar) / f_normFactor
 
 
-def tooClose(point, point2Feature, threshold=5):
+def tooClose(point, point2Feature, threshold=30):
     for k,_ in point2Feature.iteritems():
         dist = abs(k[0]-point[0]) + abs(k[1]-point[1])
         if dist < threshold: return True
     return False
+
 """
 def outOfBound(point, originImg):
     x, y = 
@@ -55,6 +58,7 @@ def extractFeature(points,originImg,numFeaturePoints):
     numPointsFound = 0
     numPoints, _ = points.shape
     point2Feature = {}
+
     while numPointsFound < numFeaturePoints:
         rand_idx = rand.randint(0,numPoints-1) 
         point = points[rand_idx,:]
@@ -63,7 +67,21 @@ def extractFeature(points,originImg,numFeaturePoints):
         feature = caclPointNormFeature(point, originImg)
         point2Feature[(point[0],point[1])] = feature
         numPointsFound += 1
-    
+
+    return point2Feature
+
+def extractFeature2(points,originImg,numFeaturePoints): 
+    numPointsFound = 0
+    numPoints, _ = points.shape
+    point2Feature = {}
+
+    for i in range(numPoints):
+        point = points[i,:]
+        #if outOfBound(point,originImg): continue
+        #if tooClose(point, point2Feature): continue
+        feature = caclPointNormFeature(point, originImg)
+        point2Feature[(point[0],point[1])] = feature
+        
     return point2Feature
 
 """
@@ -131,10 +149,10 @@ if __name__ == "__main__":
     #for i in range(2):
     cornerPoints1 = getCornerPoints(gray1)
     cornerPoints2 = getCornerPoints(gray2)
-
-    numFeaturePoints = 50
+   
+    numFeaturePoints = 15
     pTof_1 = extractFeature(cornerPoints1,gray1,numFeaturePoints)
-    pTof_2 = extractFeature(cornerPoints2,gray2,numFeaturePoints)
+    pTof_2 = extractFeature2(cornerPoints2,gray2,numFeaturePoints)
 
     corrPoints = findCorrPairs(pTof_1, pTof_2)
     corrPoints = sorted(corrPoints, key=lambda pair: pair[2])
@@ -145,7 +163,7 @@ if __name__ == "__main__":
     color = ['b','g','r','c','m','y','k','w']
     for i in range(2):
         plt.subplot(2,1,i+1)
-        plt.imshow(imgs[0])
+        plt.imshow(imgs[i])
         for j in range(8):
             pair = corrPoints[j]
             plt.plot(pair[i][1],pair[i][0],marker='.',ms=10,c=color[j])
